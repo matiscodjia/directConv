@@ -4,4 +4,38 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "imageio>=2.37.4",
+    "imageio-ffmpeg>=0.6.0",
+    "ipython>=9.15.0",
+    "matplotlib>=3.11.1",
+    "numpy>=2.0",
+    "pandas>=3.0.3",
+    "scipy>=1.17.1",
+    "scipy-stubs>=1.17.1.5",
+]
+[project.scripts]
+directconv-demo = "directConv.demo.server:main"
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[build-system]
+requires = ["maturin>=1.7,<2"]
+build-backend = "maturin"
+
+[tool.maturin]
+# Le paquet Python vit dans src/directConv, le crate PyO3 dans rust/ : maturin
+# compile ce dernier et le dépose comme directConv/_native.
+python-source = "src"
+module-name = "directConv._native"
+manifest-path = "rust/Cargo.toml"
+
+[tool.uv]
+# Rebuild the extension when the Rust side changes, not only when pyproject does.
+cache-keys = [
+    { file = "pyproject.toml" },
+    { file = "rust/Cargo.toml" },
+    { file = "rust/src/**/*.rs" },
+    { file = "../../projects/frugal_ml/src/**/*.rs" },
+]

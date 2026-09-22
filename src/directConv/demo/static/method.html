@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Method · directConv</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header id="top"></header>
+<main class="doc">
+  <div class="fade-in">
+    <p class="eyebrow">Method</p>
+    <h1>Where every number <em>comes from</em>.</h1>
+    <p class="lede">Three kinds of numbers appear in the lab. They are never mixed in one figure.</p>
+  </div>
+
+  <section class="panel sec">
+    <h2>Exact, measured, projected</h2>
+    <dl class="kv2">
+      <dt><span class="pill ok">exact</span></dt><dd><b>Bytes.</b> Every tensor's shape is known when the program is built, so memory is a formula. The tests check it against Rust's <code>size_of</code> for every frame size.</dd>
+      <dt><span class="pill acc">measured</span></dt><dd><b>Times on this computer.</b> Rust: the kernel alone (the copies between Python and Rust exist only because the lab is driven from Python). numpy: the whole of <code>np.tensordot</code>, its copy included, since the copy is part of how it works.</dd>
+      <dt><span class="pill warn">projected</span></dt><dd><b>Times on the STM32.</b> The cycle counts measured on the real board (DWT counter, read over ST-Link) applied to the shapes at hand. Nothing runs on the board from this page yet.</dd>
+    </dl>
+  </section>
+
+  <section class="panel sec">
+    <h2>The workload</h2>
+    <p>A 3×3 Sobel-x filter and a 3×3 Gaussian filter over the <b>luminance</b> of each frame (0.299 R + 0.587 G + 0.114 B), stride 1, no padding, 32-bit floats. The output of an H×W frame is (H−2)×(W−2)×2. Luminance because the streaming strategy handles one channel: RGB would triple its memory.</p>
+    <p>Every strategy's output is compared with numpy's on the first and last frames of every run. They are bit-identical.</p>
+  </section>
+
+  <section class="panel sec">
+    <h2>The chip</h2>
+    <dl class="kv2" id="chip"></dl>
+    <ul class="list">
+      <li>The stack is <b>126.4 kB</b> (linker symbols). The compiler reserves the tensors plus 0.4 to 1.7 kB, measured from the stack margin at the entry of each run: ×1.006 to ×1.038.</li>
+      <li>Tensors up to about <b>121.5 kB</b> are therefore <i>predicted</i> to fit. The largest convolution actually run on the chip is <b>72.2 kB</b>.</li>
+      <li>The benchmark firmware still carries a 75 kB safety budget from before a stack bug was fixed; the 78 kB regime it once crashed on is now skipped, never run. Confirming the 128×72 wall means running that regime on the board.</li>
+      <li>The wall at 128×72 holds for any threshold between 107 and 126 kB, because 160×90 needs 169 kB, more than the whole stack.</li>
+      <li><b>This computer</b>: the chip's rule (tensor bytes must fit) applied to an 8 MiB thread stack. The chip's overhead is assumed to hold there; it was not measured.</li>
+    </ul>
+  </section>
+
+  <section class="panel sec">
+    <h2>Statistics</h2>
+    <ul class="list">
+      <li>The clip is processed <b>batch by batch</b> (about 24 batches per strategy). Each batch gives one time per frame; the lab shows the <b>median</b> and the <b>5th to 95th percentile</b> of those, not one average.</li>
+      <li>A warm-up batch is run and thrown away first.</li>
+      <li>Long videos loop <b>forward, then backward</b>, so there is no jump cut and no frame is decoded twice. Memory does not grow with the length.</li>
+      <li>numpy's memory is measured in a <b>fresh process</b> (a peak never goes down), as the rise above the loaded batch, minus the output array.</li>
+      <li>Dropped frames follow a simple rule: a frame that arrives while the device is busy is lost, and the device takes the first one that arrives after it finishes.</li>
+    </ul>
+  </section>
+
+  <section class="panel sec">
+    <h2>Limits</h2>
+    <ul class="list">
+      <li>Frame sizes are compiled ahead: a fixed ladder of 16:9 sizes. Streaming accepts any height, but only the widths on the ladder.</li>
+      <li>The Rust core runs on one thread, with no BLAS. f32 only.</li>
+      <li>Camera rates are capped by what H.264 can carry at each size (120 fps in Full HD).</li>
+    </ul>
+  </section>
+
+  <section class="panel sec">
+    <h2>Reproduce</h2>
+    <pre>uv sync                                          # builds the Rust extension
+uv run directconv-demo                           # this site
+uv run pytest                                    # the checks behind every claim
+uv run python benchmarks/sweep_tradeoffs.py      # the numpy vs frugal_ml table</pre>
+  </section>
+</main>
+<script src="/static/common.js"></script>
+<script>
+DC.header("/method");
+DC.config().then((c) => {
+  const d = c.devices.stm32;
+  DC.$("chip").innerHTML = [
+    ["Chip", "STM32F446RE, Cortex-M4F, 168 MHz, 128 KB RAM"],
+    ["Predicted tensor limit", DC.bytes(d.budget)],
+    ["Largest run on the chip", DC.bytes(d.verified)],
+    ["Sources", "ferrite-embedded: regime.csv, scaling_bench and regime_bench logs; frugal_ml: docs/BENCHMARKS.md"],
+  ].map(([k, v]) => `<dt>${k}</dt><dd>${DC.esc(v)}</dd>`).join("");
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Why not numpy? · directConv</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header id="top"></header>
+<main class="doc">
+  <div class="fade-in">
+    <p class="eyebrow">Why not just use numpy?</p>
+    <h1>Both build the windows as a <em>view</em>.<br>Only one of them copies them.</h1>
+    <p class="lede">The speed-up is not faster arithmetic. It is a copy that <code>frugal_ml</code> never makes, and that copy is most of numpy's time.</p>
+  </div>
+
+  <section class="panel sec">
+    <h2>Where one frame's time goes</h2>
+    <p class="muted" id="src-note" style="font-size:0.9rem"></p>
+    <div class="lane"><span class="name">numpy</span><div><div class="bars" id="lane-numpy"></div><div class="total" id="tot-numpy"></div></div></div>
+    <div class="lane"><span class="name">frugal_ml</span><div><div class="bars" id="lane-frugal"></div><div class="total" id="tot-frugal"></div></div></div>
+    <div class="legend">
+      <span class="pill bad">copy of the 3×3 windows</span><span class="pill" style="background:var(--numpy);color:#fff">matrix product</span>
+      <span class="pill" style="background:var(--surface-2)">other</span><span class="pill acc">multiply-adds, read in place</span>
+    </div>
+  </section>
+
+  <section class="steps">
+    <div class="panel sec">
+      <h2>numpy</h2>
+      <ol>
+        <li><code>sliding_window_view</code> makes a strided <b>view</b>: <span id="w-view">no copy</span>.</li>
+        <li><code>np.tensordot</code> hands it to a matrix product (BLAS), which needs one flat 2-D matrix.</li>
+        <li>Flattening a strided view <b>copies</b> it: <b id="w-copy">—</b> per frame.</li>
+        <li>Then a small matrix product: <b id="w-gemm">—</b>.</li>
+      </ol>
+    </div>
+    <div class="panel sec">
+      <h2>frugal_ml</h2>
+      <ol>
+        <li><code>im2col_view</code> makes a strided view of the same kind: no copy.</li>
+        <li><code>tensordot_3</code> takes the 6-D view as it is and reads it through its strides.</li>
+        <li>Nothing is flattened, so <b>nothing is copied</b>.</li>
+        <li>The multiply-adds run straight on the frame: <b id="w-frugal">—</b>.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="panel sec">
+    <h2>What it costs you</h2>
+    <p class="muted">numpy pays for the copy once, whatever the number of filters. <code>frugal_ml</code> pays per filter and per channel, on one core, so its lead shrinks as the filter bank grows.
+      <span id="t-src"></span></p>
+    <table class="tbl" id="tradeoffs"><thead><tr><th>Channels</th><th>Filters</th><th>numpy</th><th>frugal_ml</th><th>frugal_ml vs numpy</th></tr></thead><tbody></tbody></table>
+    <ul class="list">
+      <li>The lab's workload is the first row (1 channel, 2 filters): the favourable end.</li>
+      <li>At 16 filters numpy catches up, because its matrix product reuses the one copy across all of them.</li>
+      <li>No BLAS, no threads: the loops are plain Rust, on one core.</li>
+      <li>Shapes are fixed when the program is built: a new frame size means a rebuild, which is what lets it run with no allocator.</li>
+    </ul>
+  </section>
+
+  <section class="fade-in" style="display:flex; gap:12px; flex-wrap:wrap">
+    <a class="btn primary" href="/lab">Measure it yourself in the lab →</a>
+    <a class="btn ghost" href="/method">Where the numbers come from</a>
+  </section>
+</main>
+<script src="/static/common.js"></script>
+<script src="/static/why.js"></script>
+</body>
+</html>

@@ -8,3 +8,15 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Rust
+rust/target/
+*.so
+
+# Generated or downloaded data (src/generate_fixtures.py, the demo's video fetch)
+data/
+
+# Local tooling
+.pytest_cache/
+.claude/
+.DS_Store

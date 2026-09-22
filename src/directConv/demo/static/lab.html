@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lab · directConv</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header id="top"></header>
+<main class="lab">
+
+  <section class="panel controls" aria-label="Controls">
+    <div class="field">
+      <span class="label">Run on</span>
+      <div class="seg" id="device" role="group" aria-label="Target device">
+        <button type="button" data-d="stm32" aria-pressed="true">STM32 chip<small>126 kB of stack</small></button>
+        <button type="button" data-d="host" aria-pressed="false">This computer<small>8 MiB of stack</small></button>
+      </div>
+      <p class="note" id="device-note"></p>
+    </div>
+
+    <div class="field">
+      <div class="readout"><span class="label" style="margin:0">Frame size</span><span class="sub" id="res-sub"></span></div>
+      <div class="readout"><span class="big" id="res-big">1280×720</span></div>
+      <input type="range" id="res" min="0" max="11" step="1" value="10" aria-label="Frame size">
+      <div class="ticks"><span>tiny</span><span>HD</span><span>Full HD</span></div>
+    </div>
+
+    <div class="field">
+      <div class="readout"><span class="label" style="margin:0">Camera rate</span></div>
+      <div class="readout"><span class="big" id="cam-big">60 fps</span></div>
+      <input type="range" id="cam" min="1" max="240" step="1" value="60" aria-label="Camera rate">
+      <div class="chips" id="cam-presets" style="margin-top:8px"></div>
+    </div>
+
+    <div class="field">
+      <div class="readout"><span class="label" style="margin:0">Video length</span><span class="sub" id="len-sub"></span></div>
+      <div class="readout"><span class="big" id="len-big">600 frames</span></div>
+      <input type="range" id="len" min="0" max="3" step="1" value="3" aria-label="Video length">
+      <p class="note">Longer clips give steadier statistics. The clip loops forward and back.</p>
+    </div>
+
+    <div class="field">
+      <label class="label" for="preset">Video</label>
+      <select id="preset"></select>
+      <input type="text" id="url" placeholder="https://…/clip.mp4" inputmode="url" autocomplete="off" hidden style="margin-top:6px">
+    </div>
+
+    <div class="runbox">
+      <div class="stepper" id="stepper" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      <p class="runmsg" id="runmsg" role="status" aria-live="polite"></p>
+      <button class="btn primary" id="run" type="button">▶ Run</button>
+    </div>
+  </section>
+
+  <section class="stage" aria-label="Memory and strategies">
+    <div class="panel chart">
+      <div class="scen"><span class="label">Try</span><div class="chips" id="scen"></div></div>
+      <div class="plot"><svg id="chart" viewBox="0 0 640 300" role="img" aria-label="Memory needed against frame size, with the device limit"></svg></div>
+      <p class="verdict" id="verdict"></p>
+    </div>
+    <div class="cards" id="cards" role="group" aria-label="Ways to run it"></div>
+  </section>
+
+  <section class="panel result" id="result" aria-label="Result">
+    <div class="rhead"><h2>Result</h2><span class="muted" id="zoom-hint" style="font-size:0.72rem" hidden>click a video to enlarge it</span><span class="pill acc" id="r-title" hidden></span></div>
+    <p class="stale" id="stale" hidden></p>
+    <div class="empty" id="empty">
+      <b>Pick a way, then press Run</b>
+      <span>Or try one of the scenarios above.<br>You will see the video, the frames the device keeps, and the numbers.</span>
+    </div>
+    <div id="filled" hidden style="display:grid; gap:10px">
+      <div class="videos" id="videos">
+        <figure data-k="original"><video id="v-original" muted loop playsinline></video><figcaption><b>Input</b> · luminance</figcaption></figure>
+        <figure data-k="edges"><video id="v-edges" muted loop playsinline></video><figcaption><b>Edges</b> · Sobel</figcaption></figure>
+        <figure data-k="blur"><video id="v-blur" muted loop playsinline></video><figcaption><b>Blur</b> · Gaussian</figcaption></figure>
+      </div>
+      <div class="timeline">
+        <div class="head"><span id="tl-title">Frames kept and dropped</span><span id="tl-len"></span></div>
+        <canvas id="tl" height="26"></canvas><div class="playhead" id="playhead"></div>
+      </div>
+      <div class="metrics" id="metrics"></div>
+      <div class="dist"><span class="label">Time per frame, log scale · median and 5–95 %</span><svg id="dist" viewBox="0 0 420 140"></svg></div>
+      <p class="hint" id="hint"></p>
+    </div>
+  </section>
+</main>
+<script src="/static/common.js"></script>
+<script src="/static/lab.js"></script>
+</body>
+</html>

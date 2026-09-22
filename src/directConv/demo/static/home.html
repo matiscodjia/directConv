@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>directConv</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header id="top"></header>
+<main class="home">
+  <section class="hero">
+    <div class="fade-in">
+      <p class="eyebrow">frugal_ml · Rust · no_std</p>
+      <h1>One convolution.<br>Four ways to <em>fit it</em> in memory.</h1>
+      <p class="lede">A microcontroller has about 126 kB of stack. One video frame does not fit in it. See what you trade to make it fit: resolution, memory, or speed.</p>
+      <div class="actions">
+        <a class="btn primary" href="/lab?scenario=wall">Hit the wall →</a>
+        <a class="btn ghost" href="/why">Why not just use numpy?</a>
+      </div>
+    </div>
+
+    <div class="panel wallviz fade-in" style="animation-delay: 0.15s" aria-live="off">
+      <div class="sizes"><span class="label" style="margin:0">Frame size, on the STM32F446RE</span><span class="big" id="w-size">64×36</span></div>
+      <div class="row"><span>Full frame</span><div class="track"><div class="fill" id="w-full"></div><div class="budget-mark" id="w-budget"></div></div></div>
+      <div class="row"><span>Streaming</span><div class="track"><div class="fill" id="w-stream" style="background: var(--stream)"></div><div class="budget-mark" id="w-budget2"></div></div></div>
+      <div class="sizes muted" style="font-size:0.78rem"><span id="w-full-b"></span><span>┆ dashed line: what the chip can hold</span></div>
+      <p class="verdict-line" id="w-verdict"></p>
+    </div>
+  </section>
+
+  <section class="strip" aria-label="Key numbers">
+    <div class="panel stat"><div class="n" id="n-stack">—</div><div class="t">of stack on the chip</div></div>
+    <div class="panel stat"><div class="n" id="n-frame" style="color: var(--accent)">—</div><div class="t">one 1280×720 frame needs, in full</div></div>
+    <div class="panel stat"><div class="n" id="n-stream" style="color: var(--stream)">—</div><div class="t">the same frame, streamed row by row</div></div>
+  </section>
+
+  <section class="ways" aria-label="The four ways">
+    <a class="panel way" href="/lab?scenario=fits"><span class="pill ok" style="justify-self:start">1 · Stack</span><h3>Full frame on the stack</h3><p>Fast and simple. Only for tiny frames.</p><span class="go">Try it →</span></a>
+    <a class="panel way" href="/lab?scenario=mac"><span class="pill warn" style="justify-self:start">2 · Heap</span><h3>Full frame on the heap</h3><p>Any size, but it needs an allocator the chip does not have.</p><span class="go">Try it →</span></a>
+    <a class="panel way" href="/lab?scenario=shrink"><span class="pill acc" style="justify-self:start">3 · Smaller frame</span><h3>Shrink it until it fits</h3><p>Stays fast. You keep about 1 % of the pixels.</p><span class="go">Try it →</span></a>
+    <a class="panel way" href="/lab?scenario=stream"><span class="pill" style="justify-self:start; background: var(--surface-2); color: var(--stream)">4 · Streaming</span><h3>One row at a time</h3><p>Full picture in a few kB. You pay in speed.</p><span class="go">Try it →</span></a>
+  </section>
+</main>
+<script src="/static/common.js"></script>
+<script src="/static/home.js"></script>
+</body>
+</html>
