@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: Build the Rust extension & run pytest
+    runs-on: ubuntu-latest
+    steps:
+      # rust/Cargo.toml depends on frugal_ml by path (../../../projects/frugal_ml),
+      # so reproduce the local layout: this repo in tinys/, frugal_ml in projects/.
+      - uses: actions/checkout@v4
+        with:
+          path: tinys/directConv
+      - uses: actions/checkout@v4
+        with:
+          repository: matiscodjia/frugal_ml
+          path: projects/frugal_ml
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: tinys/directConv/rust
+      - uses: astral-sh/setup-uv@v6
+      - name: Build (maturin, via uv)
+        working-directory: tinys/directConv
+        run: uv sync --frozen
+      - name: Test
+        working-directory: tinys/directConv
+        run: uv run --frozen pytest -q

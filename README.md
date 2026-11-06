@@ -10,7 +10,7 @@ frame no longer fits on the stack?**
 ```
 uv sync                 # builds the Rust extension (needs a Rust toolchain)
 uv run directconv-demo  # opens http://localhost:8000
-uv run pytest           # 101 tests
+uv run pytest           # 103 tests
 ```
 
 ## The demo
