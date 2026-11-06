@@ -1,7 +1,7 @@
 [project]
 name = "directconv"
 version = "0.1.0"
-description = "Add your description here"
+description = "One convolution, four ways to hold it in memory on a 128 KB chip: frugal_ml's no_std Rust core driven from Python (PyO3), measured against numpy."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
